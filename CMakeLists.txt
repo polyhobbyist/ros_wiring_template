@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ros_template)
+project(ros_wiring_template)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -24,8 +24,9 @@ endif()
 
 add_executable(${PROJECT_NAME} 
   src/main.cpp
-  src/SPI.cpp
-  src/SparkFun_Serial_Controlled_Motor_Driver_Arduino_Library-master/src/SCMD.cpp
+  src/wiring_for_ros/SPI.cpp
+  src/wiring_for_ros/Wire.cpp
+  src/wiring_for_ros/Arduino.cpp
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -33,12 +34,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
   )
 
-
+if(NOT MSVC)
 find_program(MAKE_EXECUTABLE
     NAMES gmake mingw32-make make
     NAMES_PER_DIR
     DOC "GNU Make")
-if(NOT MSVC)
+
 include(ExternalProject)
 ExternalProject_Add(libi2c
     GIT_REPOSITORY https://github.com/amaork/libi2c.git
@@ -52,6 +53,7 @@ ExternalProject_Get_property(libi2c SOURCE_DIR)
 
 message (STATUS "*** libi2c installed to ${SOURCE_DIR}")
 target_link_libraries(${PROJECT_NAME} ${SOURCE_DIR}/libi2c.so)
+add_dependencies(${PROJECT_NAME}  libi2c)
 
 else()
 endif()
@@ -59,19 +61,16 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
 find_package(Boost REQUIRED system)
 
 include_directories(
   include/${PROJECT_NAME}
   ${SOURCE_DIR}/include
+  src/wiring_for_ros/include
 )
 
 ament_target_dependencies(${PROJECT_NAME} 
   rclcpp
-  std_msgs
-  geometry_msgs
   Boost)
 
 install(TARGETS ${PROJECT_NAME}
